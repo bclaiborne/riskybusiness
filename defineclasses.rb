@@ -1,41 +1,40 @@
+require 'gosu'
+
 class Player
-	attr_accessor :name, :units, :areas, :wins
-	def initialize()
+	attr_accessor :name, :units, :wins
+	def initialize(name)
 		@name = name
-		@units = 20
+		@units = 5
 		@wins = 0
-		@areas = []
 	end
-	def change_units(int)
-		@units = @units + int
-	end
-	def claim_area(area)
-		@areas.push(area)
-	end
-	def set_name(name = nil)
-		if name == nil
-			puts "Please enter an arbitrary string of characters that will uniquely define you."
-			@name = gets.chomp
-		else
-			@name = name
-		end
-	end
+#	def change_units(int)
+#		@units = @units + int
+#	end
+#	def claim_area(area)
+#		@areas.push(area)
+#	end
 end
 
+# init options[:owner, :name, :latitudes, :longitudes]
 class Area
-	attr_accessor :name, :owner, :borders, :units, :attack, :target
+	attr_accessor :owner, :borders, :latitudes, :longitudes, :name
+	attr_accessor :units, :attack, :target
+
 	def initialize(options)
 		@owner = options[:owner]
-		@name = options[:name].capitalize
+		@name = options[:name]
 		@units = 0
+		@latitudes = options[:latitudes]
+		@longitudes = options[:longitudes]
 		@borders = []
 	end
-	def set_owner(player)
-		@owner = player
-	end
-	def set_border(area)
-		@borders.push(area)
-		area.borders.push(self)
+	def set_border(area1, area2 = nil)
+		@borders.push(area1)
+		area1.borders.push(self)
+		if area2 != nil
+			@borders << area2
+			area2.borders << self
+		end
 	end
 	def check_border(area)
 		@borders.each do |my_neighbor| 
@@ -43,68 +42,193 @@ class Area
 		end			
 		false
 	end
-	def roll_die(int)
-		rolls = []
+	def edge_check(options)
+		if latitudes[0] < options[:lat] && options[:lat] < latitudes[1]
+			if longitudes[0] < options[:lon] && options[:lon] < longitudes[1]
+				options[:area] = self
+			end
+		end
+		options[:area] = options[:area]
 	end
+	def draw
+		@font.draw("#{self.name}", self.name_x, self.name_y, 1, 1.0, 1.0, 0xff000000)
 
+	end
 end
 
 class Game
-	attr_accessor :player1, :player2, :west, :east, :current, :attacks, :win
-	def initialize()
-		@player1 = Player.new()
-		@player1.set_name()
-		@current = @player1
-		@player2 = Player.new()
-		@player2.set_name("Wayne the Great")
-		@west = Area.new(owner:@player1, name:"west")
-		@east = Area.new(owner:@player2, name:"east")
-		@player1.claim_area(@west)
-		@player2.claim_area(@east)
-		@west.set_border(@east)
-		@win = false
+	attr_accessor :player1, :player2, :none, :utah, :colorado, :arizona, :newmex
+	attr_accessor :currentp, :currenta, :atk, :def, :win, :phase, :instruct
 
-		puts "Welcome to Berlin Risk! Troops are building and it is up to you to free the east! Can you do it!?"
+	def initialize()
+		@player1 = Player.new("Player1")
+		@player2 = Player.new("Player2")
+		@playern = Player.new("None")
+		@currentp = @player1
+		@currenta = nil
+		puts "Players created."
+
+		@utah = Area.new(name: "Utah", owner:@playern, latitudes: [150,400], longitudes: [0,250]) 
+		@colorado = Area.new(name: "Colorado", owner:@playern, latitudes: [150,400], longitudes: [250,500]) 
+		@arizona = Area.new(name: "Arizona", owner:@playern, latitudes: [400,650], longitudes: [0,250]) 
+		@newmex = Area.new(name: "New Mexico", owner:@playern, latitudes: [400,650], longitudes: [250,500])
+		@utah.set_border(@arizona, @colorado)
+		@newmex.set_border(@colorado, @arizona)
+		puts "Areas created"
+		
+		@instruct = "#{@currentp.name} choose an area."
+		@win = false
+		@phase = "setup"
+		puts "Game Phase = #{@phase} / Win State: #{@win}"
 	end
 	def change_player()
-		if @current.equal?@player1
-			@current=@player2
+		if @currentp.equal?@player1
+			@currentp=@player2
 		else 
-			@current =@player1
+			@currentp =@player1
+		end
+		puts "Current Player: #{@currentp.name}"
+	end
+	def change_area(options)
+		@currenta = @utah.edge_check(options)
+		@currenta = @colorado.edge_check(options)
+		@currenta = @arizona.edge_check(options)
+		@currenta = @newmex.edge_check(options)
+		if @currenta then puts "Selected Area: #{@currenta.name}" else puts "Nothing Selected" end
+	end
+	def check_game_win(player)
+		_i = 0
+		if @utah.owner == player then _i += 1 end
+		if @arizona.owner == player then _i += 1 end
+		if @colorado.owner == player then _i += 1 end
+		if @newmex.owner == player then _i += 1 end
+		puts "#{@currentp.name} owns #{_i.to_s} states."
+		if _i == 4 
+			@win = true 
+			puts "Game Win."
 		end
 	end
-	def check_win(count)
-		if count >= 50
-			puts @current.name + " WINS!"
-			@win = true
+	def battle()
+		att_units = @atk.units
+		def_units = @def.units
+		if att_units <= 3 then att_units -= 1 end
+		if att_units > 3 then att_units = 3 end 
+		if def_units > 2 then def_units = 2	end
+		puts "#{@atk.name} uses: #{att_units}. #{@def.name} uses: #{def_units}."
+		att_roll = die(att_units)
+		def_roll = die(def_units)
+		puts "Attack array: #{att_roll} Defense array: #{def_roll}"
+		_i = 0
+		while (_i < def_roll.length and _i < att_roll.length) do
+			if def_roll[_i] <= att_roll[_i]
+				puts "-1 defending unit"
+				@def.units -=1
+				if @def.units == 0
+					@def.owner = atk.owner
+					@atk.units -= 1
+					@def.units += 1
+					@atk.owner.wins += 1
+				end
+			end
+			if def_roll[_i] > att_roll[_i] 
+				puts "-1 attacking unit."
+				@atk.units -=1 
+			end
+			_i += 1
 		end
 	end
-	def die_roll(number)
-		
+	def die(number)
+		i = 0
+		dice = []
+		while i < number do 
+			dice.push(1+rand(6))
+			dice.sort
+			i += 1
+		end
+		return dice
+	end
+	def update_instruct
+		if @phase == "setup"
+			@instruct = "#{@currentp.name} choose an area."
+		elsif @phase == "start"
+			@instruct = "#{@currentp.name} place a unit."
+		elsif @phase == "give_u" or @phase == "place_u"
+			@instruct = "#{@currentp.name} place a unit."
+		elsif @phase == "attack"
+			@instruct = "#{@currentp.name} select battle states."
+		end
 	end
 	def run()
-		until @win == true do
-			puts "Now its " + @current.name + "s turn!"
-			#give units to players
-			units = 3
-			if @current.wins > 2
-				units += 5
-				@current.wins = 0
+		if @phase == "setup"
+			if @currenta.owner and @currenta.owner == @playern
+				@currenta.owner = @currentp
+				if @currenta then puts "#{@currenta.name} claimed for #{@currentp.name}" else puts "No Area Selected" end
+				@currenta.units += 1
+				@currentp.units -= 1
+				change_player()
 			end
-			@current.change_units(units)
-			puts @current.name + " now has "+ @current.units.to_s + " units in " + @current.areas[0].name + " Berlin."
-			
-			#player places units
-			#attack (loops)
-			while attacks == true do 
-				puts "Want to attack?"
-				gets.chomp
-				#player chooses attacker and defender
-				#attack roll until dead or lose
+			if 	@utah.owner!=@playern && 
+				@arizona.owner!=@playern && 
+				@colorado.owner!=@playern && 
+				@newmex.owner!=@playern then
+				@phase = "start"
+				puts "All areas claimed. Phase: #{@phase}"
 			end
-			#ends turn
-			self.check_win(@current.units)
-			self.change_player()
+		elsif @phase == "start"
+			if @currenta.owner == @currentp
+				@currenta.units += 1
+				@currentp.units -= 1
+				puts "Unit placed on #{@currenta.name} for #{@currentp.name}"
+				change_player()
+			end
+			if @player1.units == 0 and @player2.units == 0 
+				@phase = "give_u" 
+				puts "Phase: #{@phase}"				
+			end
+		end
+		#give units to player
+		if @phase == "give_u"
+			@currentp.units += 3 
+			if @currentp.wins > 2
+				@currentp.units += 2
+				@currentp.wins = 0
+			end
+			@phase = "place_u"
+		end
+		if @phase == "place_u"
+			#place units
+			if @currenta.owner == @currentp
+				@currenta.units += 1
+				@currentp.units -= 1
+			end
+			@atk = @def = nil
+			puts "Attacker/Defender reset."
+			if @currentp.units == 0 
+				@phase = "attack" 
+				puts "Phase: #{@phase}"
+			end
+		elsif @phase == "attack"
+			#do battles until no units to attack or player cancels/ wins
+			if @atk == nil and @currenta.units > 1 and @currenta.owner == @currentp
+				@atk = @currenta
+				puts "Attacker: #{@atk.name}"
+			elsif @atk != nil and @atk == @currenta
+				puts "#{@atk.name} removed as attacker."
+				@atk = nil
+			elsif @def == nil and @currenta.owner != @currentp
+				@def = @currenta
+				puts "Defender: #{@def.name}"
+			elsif @def != nil and @def == @currenta
+				puts "#{@def.name} removed as defender."
+				@def = nil
+			end
+			if @atk and @def
+				battle()
+				check_game_win(@currentp)
+				@instruct = "Select battle states."
+				@atk = @def = nil
+				puts "Attacker/Defender reset."
+			end
 		end
 	end
 end
