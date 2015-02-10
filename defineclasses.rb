@@ -127,7 +127,7 @@ class Game
 		puts "Attack array: #{att_roll} Defence array: #{def_roll}"
 		_i = 0
 		while (_i < def_roll.length and _i < att_roll.length) do
-			if def_roll[_i] <= att_roll[_i]
+			if def_roll[_i] < att_roll[_i]
 				puts "-1 defending unit"
 				@def.units -=1
 				if @def.units == 0
@@ -138,7 +138,7 @@ class Game
 					@phase = "transfer"
 				end
 			end
-			if def_roll[_i] > att_roll[_i] 
+			if def_roll[_i] >= att_roll[_i] 
 				puts "-1 attacking unit."
 				@atk.units -=1 
 			end
@@ -155,7 +155,7 @@ class Game
 		end
 		return dice
 	end
-	def update_instruct
+	def update_state
 		if @phase == "setup"
 			@instruct = "#{@currentp.name} choose an area."
 		elsif @phase == "start"
@@ -166,6 +166,16 @@ class Game
 			@instruct = "#{@currentp.name} select battle states."
 		elsif @phase == "transfer"
 			@instruct = "March Troops. Rt-Click to cancel."
+		end
+		#give units to player
+		if @phase == "give_u"
+			@currentp.units += 3 
+			if @currentp.wins > 2
+				@currentp.units += 2
+				@currentp.wins = 0
+			end
+			#Change phase to unit placement
+			@phase = "place_u"
 		end
 	end
 	def run()
@@ -199,16 +209,6 @@ class Game
 				@phase = "give_u" 
 				puts "Phase: #{@phase}"				
 			end
-		end
-		#give units to player
-		if @phase == "give_u"
-			@currentp.units += 3 
-			if @currentp.wins > 2
-				@currentp.units += 2
-				@currentp.wins = 0
-			end
-			#Change phase to unit placement
-			@phase = "place_u"
 		end
 		if @phase == "place_u"
 			#place units

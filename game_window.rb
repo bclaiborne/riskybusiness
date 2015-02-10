@@ -152,7 +152,7 @@ class GameWindow < Gosu::Window
 		risk.run()
 		@click = false
 	end
-	@risk.update_instruct
+	@risk.update_state
   end
   def draw
 	cursor_hover
