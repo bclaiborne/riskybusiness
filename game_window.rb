@@ -6,30 +6,14 @@ class GameWindow < Gosu::Window
   def initialize
     super 500, 650, false, 30
     self.caption = "Four Corners Risk"
-	@background_menu = Gosu::Image.new(self, "./mainmenu.png", true)
 	@background_image = Gosu::Image.new(self, "./riskmap.png", true)
 	@breaker = Gosu::Image.new(self, "./divider.png",true)
 	@hover = Gosu::Image.new(self, "./overlay.png")
 	@font = Gosu::Font.new(self, Gosu::default_font_name, 20)
-	@mainmenu = false
 	@click = false
 	@latitude = @longitude = 0
 	@risk = Game.new
 #	@risk.currenta = @risk.utah
-  end
-  def display_menu
-	if @mainmenu == true
-		@background_menu.draw(0,150,0)
-	end
-  end
-  def display_board
-	if @mainmenu == false
-		@background_image.draw(0,150,0)
-	end
-  end
-  def menu_choice()
-	select_area()
-	@risk.currenta ? @mainmenu = false : @mainmenu = true
   end
   def display_win
 	if @risk.win == true
@@ -97,15 +81,23 @@ class GameWindow < Gosu::Window
   def button_up(id)
 	if id == Gosu::MsLeft
 		# draw text saying "Left Click Worked!"
-		@longitude = mouse_x
-		@latitude = mouse_y
-		@click = true
-		select_area()
+		if @risk.phase == "transfer"
+			@risk.transfer_units
+		else
+			@longitude = mouse_x
+			@latitude = mouse_y
+			@click = true
+			select_area()
+		end
 	end
 	if id == Gosu::MsRight
 		# draw text saying "Right Click Worked!"
 		if @risk.win
 			@risk = Game.new
+		elsif @risk.phase == "transfer"
+			@risk.atk = @risk.def = nil
+			puts "Attacker/Defender reset."
+			@risk.phase = "attack"
 		else
 			if @risk.currentp.units == 0
 				@risk.change_player
@@ -129,13 +121,11 @@ class GameWindow < Gosu::Window
 	@risk.update_instruct
   end
   def draw
-	display_menu
-	display_board
+	@background_image.draw(0,150,0)
 	cursor_hover
 	display_win
 	display_stats()
-	#display_debug()
-	if @mainmenu then menu_choice() end
+	display_debug()
   end
 end
 

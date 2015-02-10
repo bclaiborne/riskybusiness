@@ -94,7 +94,14 @@ class Game
 		@currenta = @colorado.edge_check(options)
 		@currenta = @arizona.edge_check(options)
 		@currenta = @newmex.edge_check(options)
-		if @currenta then puts "Selected Area: #{@currenta.name}" else puts "Nothing Selected" end
+		if @currenta then puts "Selected: #{@currenta.name}" else puts "Nothing Selected" end
+	end
+	def transfer_units()
+		if @atk.units > 1
+			@atk.units -= 1
+			@def.units += 1
+		end
+		@instruct = "March Troops. Rt-Click to cancel."
 	end
 	def check_game_win(player)
 		_i = 0
@@ -117,7 +124,7 @@ class Game
 		puts "#{@atk.name} uses: #{att_units}. #{@def.name} uses: #{def_units}."
 		att_roll = die(att_units)
 		def_roll = die(def_units)
-		puts "Attack array: #{att_roll} Defense array: #{def_roll}"
+		puts "Attack array: #{att_roll} Defence array: #{def_roll}"
 		_i = 0
 		while (_i < def_roll.length and _i < att_roll.length) do
 			if def_roll[_i] <= att_roll[_i]
@@ -125,9 +132,10 @@ class Game
 				@def.units -=1
 				if @def.units == 0
 					@def.owner = atk.owner
-					@atk.units -= 1
-					@def.units += 1
+					@atk.units -= att_units
+					@def.units += att_units
 					@atk.owner.wins += 1
+					@phase = "transfer"
 				end
 			end
 			if def_roll[_i] > att_roll[_i] 
@@ -142,7 +150,7 @@ class Game
 		dice = []
 		while i < number do 
 			dice.push(1+rand(6))
-			dice.sort
+			dice.sort! {|x, y| y <=> x}
 			i += 1
 		end
 		return dice
@@ -160,6 +168,7 @@ class Game
 	end
 	def run()
 		if @phase == "setup"
+			#Setting Countries Owners.
 			if @currenta.owner and @currenta.owner == @playern
 				@currenta.owner = @currentp
 				if @currenta then puts "#{@currenta.name} claimed for #{@currentp.name}" else puts "No Area Selected" end
@@ -167,6 +176,7 @@ class Game
 				@currentp.units -= 1
 				change_player()
 			end
+			#Checks for completion of phase.
 			if 	@utah.owner!=@playern && 
 				@arizona.owner!=@playern && 
 				@colorado.owner!=@playern && 
@@ -174,6 +184,7 @@ class Game
 				@phase = "start"
 				puts "All areas claimed. Phase: #{@phase}"
 			end
+		#Placing initial units phase
 		elsif @phase == "start"
 			if @currenta.owner == @currentp
 				@currenta.units += 1
@@ -181,6 +192,7 @@ class Game
 				puts "Unit placed on #{@currenta.name} for #{@currentp.name}"
 				change_player()
 			end
+			#Changes Phase if all units are placed.
 			if @player1.units == 0 and @player2.units == 0 
 				@phase = "give_u" 
 				puts "Phase: #{@phase}"				
@@ -193,6 +205,7 @@ class Game
 				@currentp.units += 2
 				@currentp.wins = 0
 			end
+			#Change phase to unit placement
 			@phase = "place_u"
 		end
 		if @phase == "place_u"
@@ -225,9 +238,10 @@ class Game
 			if @atk and @def
 				battle()
 				check_game_win(@currentp)
-				@instruct = "Select battle states."
-				@atk = @def = nil
-				puts "Attacker/Defender reset."
+				if @phase == "attack"
+					@atk = @def = nil
+					@instruct = "Select battle states."	
+				end
 			end
 		end
 	end
