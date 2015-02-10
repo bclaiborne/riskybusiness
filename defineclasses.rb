@@ -164,6 +164,8 @@ class Game
 			@instruct = "#{@currentp.name} place a unit."
 		elsif @phase == "attack"
 			@instruct = "#{@currentp.name} select battle states."
+		elsif @phase == "transfer"
+			@instruct = "March Troops. Rt-Click to cancel."
 		end
 	end
 	def run()

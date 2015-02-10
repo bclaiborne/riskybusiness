@@ -6,9 +6,19 @@ class GameWindow < Gosu::Window
   def initialize
     super 500, 650, false, 30
     self.caption = "Four Corners Risk"
-	@background_image = Gosu::Image.new(self, "./riskmap.png", true)
-	@breaker = Gosu::Image.new(self, "./divider.png",true)
-	@hover = Gosu::Image.new(self, "./overlay.png")
+	@background_image = Gosu::Image.new(self, "./images/riskmap.png", true)
+
+	@arizona_red = Gosu::Image.new(self, "./images/arir.png", true)
+	@arizona_blue = Gosu::Image.new(self, "./images/arib.png", true)
+	@colorado_red = Gosu::Image.new(self, "./images/colr.png", true)
+	@colorado_blue = Gosu::Image.new(self, "./images/colb.png", true)
+	@newmex_red = Gosu::Image.new(self, "./images/mexr.png", true)
+	@newmex_blue = Gosu::Image.new(self, "./images/mexb.png", true)
+	@utah_red = Gosu::Image.new(self, "./images/utahr.png", true)
+	@utah_blue = Gosu::Image.new(self, "./images/utahb.png", true)
+#	@breaker = Gosu::Image.new(self, "./images/divider.png",true)
+	@hover = Gosu::Image.new(self, "./images/overlay.png")
+
 	@font = Gosu::Font.new(self, Gosu::default_font_name, 20)
 	@click = false
 	@latitude = @longitude = 0
@@ -24,13 +34,38 @@ class GameWindow < Gosu::Window
 	 _position = pos - ((string.length * 6) / 2)
 	 return _position
   end
+  def display_states
+	@background_image.draw(0,0,2)
+	if @risk.arizona.owner == @risk.player1
+		@arizona_blue.draw(0,150,1)
+	elsif @risk.arizona.owner == @risk.player2
+		@arizona_red.draw(0,150,1)
+	end
+	if @risk.utah.owner == @risk.player1
+		@utah_blue.draw(0,150,1)
+	elsif @risk.utah.owner == @risk.player2
+		@utah_red.draw(0,150,1)
+	end
+	if @risk.colorado.owner == @risk.player1
+		@colorado_blue.draw(0,150,1)
+	elsif @risk.colorado.owner == @risk.player2
+		@colorado_red.draw(0,150,1)
+	end
+	if @risk.newmex.owner == @risk.player1
+		@newmex_blue.draw(0,150,1)
+	elsif @risk.newmex.owner == @risk.player2
+		@newmex_red.draw(0,150,1)
+	end
+	
+
+  end
   def display_stats
-	@font.draw("#{risk.player1.name}", 10, 10, 1, 1.0, 1.0, 0xffffffff)
-	@font.draw("Units: #{risk.player1.units}", 10, 30, 1, 1.0, 1.0, 0xffffffff)
-	@font.draw("#{risk.player2.name}", 415, 10, 1, 1.0, 1.0, 0xffffffff)
-	@font.draw("Units: #{risk.player2.units}", 415, 30, 1, 1.0, 1.0, 0xffffffff)
-	@font.draw("Left-Click: Select Area", 10, 110, 1, 1.0, 1.0, 0xffffffff)
-	@font.draw("Right-Click: Pass Turn", 315, 110, 1, 1.0, 1.0, 0xffffffff)
+	@font.draw("#{risk.player1.name}", 10, 10, 2, 1.0, 1.0, 0xff000000)
+	@font.draw("Units: #{risk.player1.units}", 10, 30, 2, 1.0, 1.0, 0xff000000)
+	@font.draw("#{risk.player2.name}", 415, 10, 2, 1.0, 1.0, 0xff000000)
+	@font.draw("Units: #{risk.player2.units}", 415, 30, 2, 1.0, 1.0, 0xff000000)
+	@font.draw("Left-Click: Select Area", 10, 110, 2, 1.0, 1.0, 0xff000000)
+	@font.draw("Right-Click: Pass Turn", 315, 110, 2, 1.0, 1.0, 0xff000000)
 	@font.draw("#{risk.utah.owner.name}", 170, 330, 1, 1.0, 1.0, 0xffffffff)
 	@font.draw("Units: #{risk.utah.units}", 170, 350, 1, 1.0, 1.0, 0xffffffff)
 	@font.draw("#{risk.colorado.owner.name}", 270, 330, 1, 1.0, 1.0, 0xffffffff)
@@ -39,8 +74,7 @@ class GameWindow < Gosu::Window
 	@font.draw("Units: #{risk.arizona.units}", 170, 430, 1, 1.0, 1.0, 0xffffffff)
 	@font.draw("#{risk.newmex.owner.name}", 270, 410, 1, 1.0, 1.0, 0xffffffff)
 	@font.draw("Units: #{risk.newmex.units}", 270, 430, 1, 1.0, 1.0, 0xffffffff)
-	@font.draw("#{risk.instruct}", centered(@risk.instruct, 250), 60, 1, 1.0, 1.0, 0xffffffff)
-	@breaker.draw(0,148,3)
+	@font.draw("#{risk.instruct}", centered(@risk.instruct, 250), 60, 2, 1.0, 1.0, 0xff000000)
   end
   def display_debug
 	@debug = {p_name: "",a_name: "",phase: "",win:""}
@@ -53,25 +87,25 @@ class GameWindow < Gosu::Window
 		@debug[:a_name] = @risk.currenta.name 
 	end
 	
-	@font.draw("Current Player: #{@debug[:p_name]}", 200, 170, 1, 1.0, 1.0, 0xff000000)
-	@font.draw("Current Area: #{@debug[:a_name]}", 200, 190, 1, 1.0, 1.0, 0xff000000)
-	@font.draw("Current Phase: #{@debug[:phase]}", 200, 210, 1, 1.0, 1.0, 0xff000000)
-	@font.draw("Win state: #{@debug[:win]}", 200, 230, 1, 1.0, 1.0, 0xff000000)
-	@font.draw("mouse x: #{@longitude} mouse y: #{latitude}", 200, 250, 1, 1.0, 1.0, 0xff000000)
+	@font.draw("Current Player: #{@debug[:p_name]}", 200, 170, 3, 1.0, 1.0, 0xff000000)
+	@font.draw("Current Area: #{@debug[:a_name]}", 200, 190, 3, 1.0, 1.0, 0xff000000)
+	@font.draw("Current Phase: #{@debug[:phase]}", 200, 210, 3, 1.0, 1.0, 0xff000000)
+	@font.draw("Win state: #{@debug[:win]}", 200, 230, 3, 1.0, 1.0, 0xff000000)
+	@font.draw("mouse x: #{@longitude} mouse y: #{latitude}", 200, 250, 3, 1.0, 1.0, 0xff000000)
 
   end
   def cursor_hover
 	if mouse_x <= 250
 		if mouse_y > 150 && mouse_y <= 400
-			@hover.draw(-20,150,2)
+			@hover.draw(-20,150,3)
 		elsif mouse_y > 350
-			@hover.draw(-20,400,2)
+			@hover.draw(-20,400,3)
 		end
 	else 
 		if mouse_y > 150 && mouse_y <= 400
-			@hover.draw(250,150,2)
+			@hover.draw(250,150,3)
 		elsif mouse_y > 350
-			@hover.draw(250,400,2)
+			@hover.draw(250,400,3)
 		end
 	end
   end
@@ -121,9 +155,9 @@ class GameWindow < Gosu::Window
 	@risk.update_instruct
   end
   def draw
-	@background_image.draw(0,150,0)
 	cursor_hover
 	display_win
+	display_states()
 	display_stats()
 	display_debug()
   end
