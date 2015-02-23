@@ -159,7 +159,7 @@ class GameWindow < Gosu::Window
 	display_win
 	display_states()
 	display_stats()
-	display_debug()
+	#display_debug()
   end
 end
 
