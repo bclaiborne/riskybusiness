@@ -14,3 +14,4 @@ ruby start_game.rb
 
 1. Currently you are able to attack diagonally. The game does not check borders before initiating an attack. If the game expands beyond a 2x2 map, territory borders will need to be implemented.
 2. Transferring units to a conquered territory is currently one way only. If too many units are moved, you cannot 'undo' it. 
+3. Right click control instructions do not update when transferring units after a battle or after game completion. Instructions should say, "Rt-Click: Stop Transferring." and "Rt-Click: Reset Game." respectively.
