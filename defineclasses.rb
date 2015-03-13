@@ -3,19 +3,13 @@ require 'gosu'
 class Player
 	attr_accessor :name, :units, :wins
 	def initialize(name)
+		#initialize a player with a name, default units and no battle wins. - DO IT!
 		@name = name
 		@units = 5
 		@wins = 0
 	end
-#	def change_units(int)
-#		@units = @units + int
-#	end
-#	def claim_area(area)
-#		@areas.push(area)
-#	end
 end
 
-# init options[:owner, :name, :latitudes, :longitudes]
 class Area
 	attr_accessor :owner, :borders, :latitudes, :longitudes, :name
 	attr_accessor :units, :attack, :target
