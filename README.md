@@ -19,4 +19,4 @@ ruby start_game.rb
 5. Right click control instructions do not update when transferring units after a battle or after game completion. Instructions should say, "Rt-Click: Stop Transferring." and "Rt-Click: Reset Game." respectively.
 
 </hr>
-Map created using vector map created by Erin Dill. http://www.vecteezy.com/map-vector/5937-united-states-map-vector
+Map created using BlankUSmap.svg created by Theshibboleth. http://commons.wikimedia.org/wiki/File:Blank_US_Map.svg#Licensing
